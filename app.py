@@ -1,31 +1,46 @@
 import streamlit as st
 
-# --- CONFIGURAÇÃO DE DESIGN E CORES ---
+# --- DESIGN E CORES ATUALIZADOS ---
 st.set_page_config(page_title="EconoMart", layout="centered")
 
 st.markdown("""
     <style>
     .main { background-color: #121212; }
-    
-    /* Centralizar Título */
-    .titulo-centralizado {
-        text-align: center;
-        margin-bottom: 20px;
-    }
+    .titulo-centralizado { text-align: center; margin-bottom: 20px; }
 
-    /* Estilo do Card Laranja (Informação do Produto) */
+    /* Card Laranja Padrão */
     .card-info {
         background-color: #FF8C00; 
         padding: 12px;
         border-radius: 15px 15px 0px 0px;
         color: white;
         font-weight: bold;
-        margin-bottom: 0px;
-        border: 1px solid #e67e00;
         text-align: center;
+        border: 1px solid #e67e00;
+    }
+
+    /* Card Destaque (Mais Barato) */
+    .card-melhor-preco {
+        background-color: #FF8C00; 
+        padding: 12px;
+        border-radius: 15px 15px 0px 0px;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        border: 4px solid #00FF7F; /* Borda Verde Brilhante */
     }
     
-    /* Estilo do Botão Vermelho (Adicionar) */
+    .selo-economia {
+        background-color: #00FF7F;
+        color: #000;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+
+    /* Botão Vermelho Largo */
     div.stButton > button {
         background-color: #FF0000 !important; 
         color: white !important;
@@ -35,106 +50,106 @@ st.markdown("""
         border: none !important;
         font-weight: bold !important;
         margin-top: -2px !important;
-        font-size: 16px !important;
     }
     
-    /* Ajuste de cor de textos gerais */
     h2, h3, span, label { color: #ffffff !important; }
-    
-    /* Esconder o label (nome) da barra de pesquisa para ficar só o interno */
-    div[data-testid="stTextInput"] label {
-        display: none;
-    }
+    div[data-testid="stTextInput"] label { display: none; }
     </style>
 """, unsafe_allow_html=True)
 
-# 1. Nome Centralizado
-st.markdown("""
-    <div class='titulo-centralizado'>
-        <h1><span style='color: #FF0000;'>Econo</span><span style='color: #FF8C00;'>Mart</span></h1>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("<div class='titulo-centralizado'><h1><span style='color: #FF0000;'>Econo</span><span style='color: #FF8C00;'>Mart</span></h1></div>", unsafe_allow_html=True)
 
-# --- SISTEMA DE DADOS ---
-if 'logado' not in st.session_state:
-    st.session_state.logado = False
-if 'carrinho' not in st.session_state:
-    st.session_state.carrinho = []
-if 'mercados' not in st.session_state:
-    st.session_state.mercados = ["Mercado 1", "Mercado 2", "Mercado 3"]
+# --- DADOS ---
+if 'logado' not in st.session_state: st.session_state.logado = False
+if 'carrinho' not in st.session_state: st.session_state.carrinho = []
+if 'mercados' not in st.session_state: st.session_state.mercados = ["Mercado 1", "Mercado 2", "Mercado 3"]
 if 'dados' not in st.session_state:
     st.session_state.dados = {m: {"🥩 Carnes": {}, "🧼 Limpeza": {}, "🪥 Higiene": {}} for m in st.session_state.mercados}
 
-# --- LOGIN ---
 if not st.session_state.logado:
     st.markdown("<h3 style='text-align:center;'>👋 Bem-vindo!</h3>", unsafe_allow_html=True)
-    n = st.text_input("Nome", placeholder="Digite seu nome")
-    e = st.text_input("E-mail", placeholder="seu@email.com")
+    n = st.text_input("Nome", placeholder="Nome")
+    e = st.text_input("E-mail", placeholder="E-mail")
     if st.button("🚀 ENTRAR"):
         if n and e: st.session_state.logado = True; st.rerun()
 else:
     aba1, aba2 = st.tabs(["🛒 COMPRAS", "⚙️ CONFIGURAÇÕES"])
 
     with aba2:
-        st.markdown("### ⚙️ Configurações")
-        with st.expander("🏢 Nome dos Mercados"):
+        st.subheader("⚙️ Configurações")
+        with st.expander("🏢 Nomes dos Mercados"):
             for i in range(3):
                 novo = st.text_input(f"Mercado {i+1}", value=st.session_state.mercados[i], key=f"m{i}")
                 if novo != st.session_state.mercados[i]:
                     st.session_state.dados[novo] = st.session_state.dados.pop(st.session_state.mercados[i])
                     st.session_state.mercados[i] = novo
-
         with st.expander("📝 Cadastrar Produtos"):
-            m_s = st.selectbox("Mercado", st.session_state.mercados)
-            t_s = st.selectbox("Tópico", list(st.session_state.dados[m_s].keys()) + ["➕ Novo"])
-            if t_s == "➕ Novo":
-                nt = st.text_input("Nome Tópico")
+            ms = st.selectbox("Mercado", st.session_state.mercados)
+            ts = st.selectbox("Tópico", list(st.session_state.dados[ms].keys()) + ["➕ Novo"])
+            if ts == "➕ Novo":
+                nt = st.text_input("Nome do Tópico")
                 if st.button("Criar"):
                     for m in st.session_state.mercados: st.session_state.dados[m][nt] = {}
                     st.rerun()
             else:
-                pn = st.text_input("Produto", placeholder="Ex: Arroz")
+                pn = st.text_input("Produto", placeholder="Ex: Cerveja")
                 pp = st.number_input("Preço", min_value=0.0, format="%.2f")
                 if st.button("💾 SALVAR"):
-                    st.session_state.dados[m_s][t_s][pn] = pp
+                    st.session_state.dados[ms][ts][pn] = pp
                     st.success("Salvo!")
 
     with aba1:
-        # 2. Barra de Pesquisa com texto interno (Placeholder)
         busca = st.text_input("busca_interna", placeholder="🔍 Buscar produto...")
         
         if busca:
-            st.markdown(f"**Resultados para: {busca}**")
+            resultados = []
             for m in st.session_state.mercados:
                 for t, prods in st.session_state.dados[m].items():
                     for p, v in prods.items():
                         if busca.lower() in p.lower():
-                            st.markdown(f"<div class='card-info'>{p}<br><span style='font-size:12px;'>{m} - R$ {v:.2f}</span></div>", unsafe_allow_html=True)
-                            if st.button(f"ADICIONAR {p}", key=f"busc_{m}_{p}"):
-                                st.session_state.carrinho.append({"p": p, "v": v, "m": m})
-                                st.toast("No carrinho!")
+                            resultados.append({'p': p, 'v': v, 'm': m})
+            
+            if resultados:
+                # Encontrar o menor preço da lista
+                menor_preco = min(r['v'] for r in resultados)
+                
+                for res in resultados:
+                    is_mais_barato = (res['v'] == menor_preco)
+                    estilo_card = "card-melhor-preco" if is_mais_barato else "card-info"
+                    selo = "<div class='selo-economia'>🥇 MELHOR PREÇO 💸</div><br>" if is_mais_barato else ""
+                    
+                    st.markdown(f"""
+                        <div class='{estilo_card}'>
+                            {selo}{res['p']}<br>
+                            <span style='font-size:12px;'>{res['m']} - R$ {res['v']:.2f}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    if st.button(f"ADICIONAR {res['p']} ({res['m']})", key=f"b_{res['m']}_{res['p']}"):
+                        st.session_state.carrinho.append(res)
+                        st.toast("Adicionado!")
+            else:
+                st.warning("Nenhum produto encontrado.")
 
         st.markdown("### 🏪 Mercados")
         for m in st.session_state.mercados:
             with st.expander(f"🏢 {m}"):
                 for t, prods in st.session_state.dados[m].items():
-                    st.markdown(f"**{t}**")
-                    for p, v in prods.items():
-                        st.markdown(f"<div class='card-info'>{p}<br><span style='font-size:12px;'>R$ {v:.2f}</span></div>", unsafe_allow_html=True)
-                        if st.button(f"ADICIONAR +", key=f"lis_{m}_{p}"):
-                            st.session_state.carrinho.append({"p": p, "v": v, "m": m})
-                            st.toast("No carrinho!")
+                    if prods:
+                        st.markdown(f"**{t}**")
+                        for p, v in prods.items():
+                            st.markdown(f"<div class='card-info'>{p}<br><span style='font-size:12px;'>R$ {v:.2f}</span></div>", unsafe_allow_html=True)
+                            if st.button(f"ADICIONAR {p}", key=f"l_{m}_{p}"):
+                                st.session_state.carrinho.append({'p': p, 'v': v, 'm': m})
+                                st.toast("No carrinho!")
 
-    # RODAPÉ TOTAL
-    tot = sum(item['v'] for item in st.session_state.carrinho)
+    # TOTAL
+    total_val = sum(i['v'] for i in st.session_state.carrinho)
     st.markdown("---")
-    with st.expander(f"🛒 TOTAL: R$ {tot:.2f}"):
-        if st.session_state.carrinho:
-            for i, it in enumerate(st.session_state.carrinho):
-                c1, c2 = st.columns([3, 1])
-                c1.write(f"{it['p']} ({it['m']})")
-                if c2.button("🗑️", key=f"d_{i}"):
-                    st.session_state.carrinho.pop(i)
-                    st.rerun()
-        else:
-            st.write("Vazio")
+    with st.expander(f"🛒 TOTAL NO CARRINHO: R$ {total_val:.2f}"):
+        for idx, item in enumerate(st.session_state.carrinho):
+            c1, c2 = st.columns([3, 1])
+            c1.write(f"{item['p']} - {item['m']}")
+            if c2.button("🗑️", key=f"del_{idx}"):
+                st.session_state.carrinho.pop(idx)
+                st.rerun()
